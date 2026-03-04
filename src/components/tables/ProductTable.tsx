@@ -45,25 +45,39 @@ import {
 
 import ProductForm from "../form/ProductForm";
 import { Product } from "@/types/product";
-
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 export default function ProductTable() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await api.get("/products");
+
+      const res = await api.get(`/products?page=${page}&limit=${limit}`);
+
       setProducts(res.data.data);
+      setTotalPages(res.data.meta.totalPages);
+      // 👆 make sure backend sends:
+      // {
+      //   data: Product[],
+      //   meta: { totalPages: number }
+      // }
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  }, [page, limit]);
 
   const toggleExpand = (id: string) => {
     const next = new Set(expanded);
@@ -85,7 +99,24 @@ export default function ProductTable() {
     await api.delete(`/products/${id}`);
     load();
   };
-
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+  
+        const res = await api.get(
+          `/products?page=${page}&limit=${limit}`
+        );
+  
+        setProducts(res.data.data);
+        setTotalPages(res.data.meta.totalPages);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchProducts();
+  }, [page, limit]);
   if (loading) {
     return (
       <div className="space-y-4">
@@ -96,6 +127,7 @@ export default function ProductTable() {
     );
   }
   // console.log(products);
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -269,6 +301,44 @@ export default function ProductTable() {
                 ))}
               </TableBody>
             </Table>
+            {totalPages > 1 && (
+              <div className="mt-6 flex justify-center">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => page > 1 && setPage(page - 1)}
+                        className={
+                          page === 1 ? "pointer-events-none opacity-50" : ""
+                        }
+                      />
+                    </PaginationItem>
+
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                      <PaginationItem key={i}>
+                        <PaginationLink
+                          isActive={page === i + 1}
+                          onClick={() => setPage(i + 1)}
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => page < totalPages && setPage(page + 1)}
+                        className={
+                          page === totalPages
+                            ? "pointer-events-none opacity-50"
+                            : ""
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

@@ -11,11 +11,18 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, MoreVertical } from "lucide-react";
+import { ChevronDown, ChevronUp, MoreVertical, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { imageLink } from "@/config/cloudinary";
 import api from "@/lib/axiosInterceptor";
 import { Order } from "@/types/order";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -47,10 +54,11 @@ export default function UserOrdersTable({
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
-
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const updateOrder = async (
     orderId: string,
-    payload: { status?: string; paymentStatus?: string },
+    payload: { status?: string; paymentStatus?: string }
   ) => {
     try {
       setLoadingIds((prev) => new Set(prev).add(orderId));
@@ -68,6 +76,23 @@ export default function UserOrdersTable({
         next.delete(orderId);
         return next;
       });
+    }
+  };
+  const deleteOrder = async () => {
+    if (!deleteId) return;
+
+    try {
+      setDeleteLoading(true);
+
+      await api.delete(`/orders/${deleteId}`);
+
+      toast.success("Order deleted successfully");
+      setDeleteId(null);
+      onRefresh();
+    } catch (err) {
+      toast.error("Failed to delete order");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -117,9 +142,7 @@ export default function UserOrdersTable({
                   </Button>
                 </TableCell>
 
-                <TableCell className="font-medium">
-                  #{order.id.slice(-6)}
-                </TableCell>
+                <TableCell className="font-medium">{order.id}</TableCell>
                 <TableCell>
                   {new Date(order.createdAt).toLocaleDateString()}
                 </TableCell>
@@ -146,7 +169,7 @@ export default function UserOrdersTable({
                 </TableCell>
 
                 {/* ACTION DROPDOWN */}
-                <TableCell>
+                <TableCell className=" flex items-center ">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button size="icon" variant="ghost">
@@ -185,6 +208,13 @@ export default function UserOrdersTable({
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setDeleteId(order.id)}
+                  >
+                    <Trash2 size={18} className="text-red-600" />
+                  </Button>
                 </TableCell>
               </TableRow>
 
@@ -193,14 +223,14 @@ export default function UserOrdersTable({
                 <TableRow>
                   <TableCell colSpan={7} className="bg-muted/40">
                     {/* details like items, shipping, payment */}
-                    <div className="grid gap-6 md:grid-cols-3 text-sm">
+                    <div className="grid gap-6  text-sm">
                       {/* ITEMS */}
                       <div>
                         <p className="font-semibold mb-2">Items</p>
                         <div className="space-y-2">
                           {order.items.map((item) => (
                             <div key={item.id} className="flex gap-3">
-                              <div className="relative h-50 w-50 overflow-hidden rounded-md border">
+                              <div className="relative min-h-50 min-w-50 max-h-50 max-w-50 overflow-hidden rounded-md border">
                                 <Image
                                   src={imageLink(item.imageUrl)}
                                   fill
@@ -274,6 +304,36 @@ export default function UserOrdersTable({
           ))}
         </TableBody>
       </Table>
+      <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you sure?</DialogTitle>
+          </DialogHeader>
+
+          <p className="text-sm text-muted-foreground">
+            This action will permanently delete this order. This cannot be
+            undone.
+          </p>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteId(null)}
+              disabled={deleteLoading}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              variant="destructive"
+              onClick={deleteOrder}
+              disabled={deleteLoading}
+            >
+              {deleteLoading ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

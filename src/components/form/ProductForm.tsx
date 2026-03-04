@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
+import "react-quill-new/dist/quill.snow.css";
 import {
   Select,
   SelectContent,
@@ -55,6 +57,7 @@ import Image from "next/image";
 import api from "@/lib/axiosInterceptor";
 import { cn } from "@/lib/utils";
 import { imageLink } from "@/config/cloudinary";
+import dynamic from "next/dynamic";
 
 // Sub-types matching the Product interface
 type Category = {
@@ -135,10 +138,10 @@ export default function ProductForm({ product, onSuccess, trigger }: Props) {
   // UI state
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>(
-    product?.imageUrls || [],
+    product?.imageUrls || []
   );
   const [existingImages, setExistingImages] = useState<string[]>(
-    product?.imageUrls || [],
+    product?.imageUrls || []
   );
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -273,7 +276,7 @@ export default function ProductForm({ product, onSuccess, trigger }: Props) {
         });
       }
     },
-    [],
+    []
   );
 
   const removeImage = useCallback(
@@ -307,7 +310,7 @@ export default function ProductForm({ product, onSuccess, trigger }: Props) {
         return newPreviews;
       });
     },
-    [existingImages],
+    [existingImages]
   );
 
   // Form submission
@@ -338,7 +341,7 @@ export default function ProductForm({ product, onSuccess, trigger }: Props) {
       if (formData.discountPrice) {
         formDataToSend.append(
           "discountPrice",
-          formData.discountPrice.toString(),
+          formData.discountPrice.toString()
         );
       }
       if (formData.subCategoryId) {
@@ -353,7 +356,7 @@ export default function ProductForm({ product, onSuccess, trigger }: Props) {
       if (product && existingImages.length > 0) {
         formDataToSend.append(
           "existingImageUrls",
-          JSON.stringify(existingImages),
+          JSON.stringify(existingImages)
         );
       }
 
@@ -514,20 +517,28 @@ export default function ProductForm({ product, onSuccess, trigger }: Props) {
               </div>
 
               {/* Description */}
+
               <div className="space-y-2">
                 <Label htmlFor="description">Description *</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe your product..."
-                  value={formData.description}
-                  onChange={(e) =>
+                <ReactQuill
+                  theme="snow"
+                  value={formData.description} // bind to your form state
+                  onChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
-                      description: e.target.value,
+                      description: value, // Quill returns HTML string
                     }))
                   }
-                  rows={4}
-                  required
+                  placeholder="Describe your product..."
+                  modules={{
+                    toolbar: [
+                      [{ header: [1, 2, false] }],
+                      ["bold", "italic", "underline", "strike", "blockquote"],
+                      [{ list: "ordered" }, { list: "bullet" }],
+                      ["link", "image"],
+                      ["clean"],
+                    ],
+                  }}
                 />
               </div>
 
@@ -789,7 +800,7 @@ export default function ProductForm({ product, onSuccess, trigger }: Props) {
                         <CommandGroup className="max-h-64 overflow-y-auto">
                           {availableSizes.map((size) => {
                             const isSelected = formData.sizes.some(
-                              (s) => s.id === size.id,
+                              (s) => s.id === size.id
                             );
                             return (
                               <CommandItem
@@ -800,7 +811,7 @@ export default function ProductForm({ product, onSuccess, trigger }: Props) {
                                   <Check
                                     className={cn(
                                       "h-4 w-4",
-                                      isSelected ? "opacity-100" : "opacity-0",
+                                      isSelected ? "opacity-100" : "opacity-0"
                                     )}
                                   />
                                   <span>{size.name}</span>
