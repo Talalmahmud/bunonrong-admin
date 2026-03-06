@@ -1,2 +1,2 @@
 
-## AMAR ADMIN 
+## AMAR Corner Admin 
