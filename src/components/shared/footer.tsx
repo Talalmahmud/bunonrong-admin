@@ -1,6 +1,7 @@
 "use client";
 
 import { Instagram, Facebook, Twitter, Linkedin } from "lucide-react";
+import Link from "next/link";
 
 export default function Footer() {
   return (
@@ -8,7 +9,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 md:px-0 grid grid-cols-1 md:grid-cols-4 gap-8">
         {/* Logo & Description */}
         <div>
-          <h2 className="text-2xl font-bold text-white mb-3">ShopMate</h2>
+          <h2 className="text-2xl font-bold text-white mb-3">Bunon Rong</h2>
           <p className="text-sm text-slate-400">
             Your one-stop shop for electronics, fashion, home & more.
           </p>
@@ -89,6 +90,16 @@ export default function Footer() {
       {/* Bottom */}
       <div className="mt-12 border-t border-slate-700 pt-6 text-center text-sm text-slate-500">
         &copy; {new Date().getFullYear()} ShopMate. All rights reserved.
+      </div>
+      <div className="mt-12 border-t border-slate-700 pt-6 text-center text-sm text-slate-500">
+        Developed By{" "}
+        <Link
+          href="https://www.linkedin.com/in/talal-mahmud2/"
+          target="_blank"
+          className="text-blue-500 hover:underline"
+        >
+          Talal Mahmud
+        </Link>
       </div>
     </footer>
   );
